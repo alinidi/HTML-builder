@@ -15,20 +15,35 @@ function copyDir() {
         console.error(`Error: ${err.message}`);
         return;
       }
-      fs.readdir(folderPath, (err, files) => {
+      fs.readdir(folderPath, { withFileTypes: true }, (err, files) => {
         if (err) {
           console.error(`Error: ${err.message}`);
           return;
         }
+
+        let pendingFiles = files.filter((file) => file.isFile()).length;
+
+        if (pendingFiles === 0) {
+          console.log('No files to copy.');
+          return;
+        }
+
         files.forEach((file) => {
-          const srcPath = path.join(folderPath, file);
-          const copyPath = path.join(copyFolderPath, file);
-          fs.copyFile(srcPath, copyPath, (err) => {
-            if (err) {
-              console.error(`Error: ${err.message}`);
-              return;
-            }
-          });
+          if (file.isFile()) {
+            const srcPath = path.join(folderPath, file.name);
+            const copyPath = path.join(copyFolderPath, file.name);
+            fs.copyFile(srcPath, copyPath, (err) => {
+              if (err) {
+                console.error(
+                  `Error copying file: ${file.name}: ${err.message}`,
+                );
+              }
+              pendingFiles -= 1;
+              if (pendingFiles === 0) {
+                console.log('All files copied successfully.');
+              }
+            });
+          }
         });
       });
     });

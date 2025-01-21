@@ -1,33 +1,26 @@
 const fs = require('fs');
 const path = require('path');
-const readline = require('readline');
-
 const filePath = path.join(__dirname, 'text.txt');
-const writableStream = fs.createWriteStream(filePath);
+const stdIn = process.stdin;
+const stdOut = process.stdout;
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-  prompt: 'Hello! Enter the text, please: ',
+fs.writeFile(filePath, '', (err) => {
+  if (err) throw err;
 });
+stdOut.write('Hello! Enter your text, please: ');
 
-rl.prompt();
-
-rl.on('line', (line) => {
-  if (line.trim().toLowerCase() === 'exit') {
-    rl.close();
-    console.log('Bye!');
+stdIn.on('data', (data) => {
+  if (data.toString().trim() === 'exit') {
+    stdOut.write('Bye!');
+    process.exit(0);
   } else {
-    writableStream.write(`${line}\n`);
-    rl.prompt();
+    fs.appendFile(filePath, data, (err) => {
+      if (err) throw err;
+    });
   }
 });
 
-rl.on('error', (error) => {
-  console.log(`Error: ${error.message}`);
-  rl.close();
-});
-
-writableStream.on('error', (error) => {
-  console.log(`Error: ${error.message}`);
+process.on('SIGINT', () => {
+  stdOut.write('Bye!');
+  process.exit(0);
 });
